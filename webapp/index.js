@@ -14,6 +14,7 @@ var envelopeFunction = {
 	sin: function(x) { return Math.sin(x*Math.PI) },
 	sin3: function(x) { return Math.pow(Math.sin(x*Math.PI), 3) },
 	sinr3: function(x) { return Math.pow(Math.sin(x*Math.PI), 1/3) },
+	sina: function(x) { return Math.sin(x*Math.PI)*1/2 + 1/2 },
 }
 
 app.use(express.static('static'));
