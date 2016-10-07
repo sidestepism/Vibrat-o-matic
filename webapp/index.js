@@ -28,9 +28,10 @@ io.on('connection', function(socket){
 
 	socket.on('test', function (data) {
 	var startDate = +(new Date())
+	if (data.updateInterval) updateInterval = data.updateInterval
 
 	if (data.envelopeFunction == 'default') {
-
+		send_command(1, data.strength, data.length)
 	}else{
 		if (!envelopeFunction[data.envelopeFunction]){
 			console.log("no such envelope function:", data.envelopeFunction)
@@ -106,6 +107,7 @@ function send_command(channel, intensity, duration) {
 		} else {
 			console.log("ERROR: Command malformatted, will not send to openEMSstim");
 		}
+		command += "\n"
 		console.log("sending: " + command);
 		openEMSstim.write(command);
 	} else {

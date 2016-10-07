@@ -11,9 +11,11 @@ $(function () {
 	 $("#test-submit").click(function () {
 	 	var afn = function () {
 			socket.emit('test', {
+				// add + for numeric value
 		 		length: +$("#test-length").val(),
 				strength: +$("#test-strength").val(),
 				envelopeFunction: $("#test-envelope").val(),
+				updateInterval: +$("#test-update-interval").val()
 			});
 	 	}
 	 	afn();
