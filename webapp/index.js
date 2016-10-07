@@ -38,7 +38,6 @@ io.on('connection', function(socket){
 			console.log("no such envelope function:", data.envelopeFunction)
 			return
 		}
-		console.log(data);
 		if (updateIntervalTimer){
 			clearInterval(updateIntervalTimer)
 		}
@@ -72,24 +71,25 @@ openEMSstim.on('close', showPortClose);
 openEMSstim.on('error', showError);
 
 function showPortOpen() {
-	   console.log('openEMSstim connected to serial port at data rate: ' + openEMSstim.options.baudRate);
+	   // console.log('openEMSstim connected to serial port at data rate: ' + openEMSstim.options.baudRate);
 }
  
 function sendSerialData(data) {
-	   console.log(data);
+	   // console.log(data);
 }
  
 function showPortClose() {
-	   console.log('openEMSstim connection to serial port closed.');
+	   // console.log('openEMSstim connection to serial port closed.');
 }
  
 function showError(error) {
-	   console.log('Serial port error: ' + error);
+	   // console.log('Serial port error: ' + error);
 }
 
 //First validates a command, then if valid, sends it to the openEMSstim
 function send_command(channel, intensity, duration) {
 	var command = ""
+	console.log("||||||||||||||||||||||||||||||".substring(0, Math.round(intensity / 3)))
 	if (is_numeric(channel) && is_numeric(intensity) && is_numeric(duration)) {
 		if (channel == 1 || channel == 2) {
 			command = "C" + (channel -1);
@@ -109,7 +109,7 @@ function send_command(channel, intensity, duration) {
 			console.log("ERROR: Command malformatted, will not send to openEMSstim");
 		}
 		command += "\n"
-		console.log("sending: " + command);
+		// console.log("sending: " + command);
 		openEMSstim.write(command);
 	} else {
 		console.log("ERROR: Command malformatted, will not send to openEMSstim");

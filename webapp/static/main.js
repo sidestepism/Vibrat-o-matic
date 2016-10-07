@@ -48,9 +48,9 @@ $(function () {
 			var interval = Math.round(1000 / ($("#sing-freqency").val() / 10))
 			socket.emit('test', {
 				// add + for numeric value
-				length: Math.round(interval * 0.7),
+				length: Math.round(interval),
 				strength: +$("#sing-strength").val(),
-				envelopeFunction: "sina",
+				envelopeFunction: "sin",
 				updateInterval: 20
 			});
 			singEmitTimer = setTimeout(emit, interval);
@@ -75,7 +75,7 @@ $(function () {
 	var updateParam = function (evt) {
 		// console.log(evt);
 	 // 	console.log(evt.offsetX, evt.offsetY, $(evt.currentTarget).height(), $(evt.currentTarget).width())
-	 	var freq = Math.round(1 + evt.offsetX / $(evt.currentTarget).width() * 9 * 10) / 10
+	 	var freq = Math.round(10 + evt.offsetX / $(evt.currentTarget).width() * 6 * 10) / 10
 	 	var strength = 100 - Math.round(evt.offsetY / $(evt.currentTarget).height() * 100)
 	 	$("#sing-freqency").val(freq * 10)
 	 	$("#sing-freqency-label").text(freq)
