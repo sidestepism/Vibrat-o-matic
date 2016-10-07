@@ -11,9 +11,9 @@ $(function () {
 	 $("#test-submit").click(function () {
 	 	var afn = function () {
 			socket.emit('test', {
-		 		'length': +$("#test-length").val(),
-				'strength': +$("#test-strength").val(),
-				'waveform': +$("#test-waveform").val(),
+		 		length: +$("#test-length").val(),
+				strength: +$("#test-strength").val(),
+				envelopeFunction: $("#test-envelope").val(),
 			});
 	 	}
 	 	afn();

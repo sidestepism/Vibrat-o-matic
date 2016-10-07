@@ -4,8 +4,17 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var SerialPort = require('serialport');
 
-var DEFAULT_SERIAL_COM = "/dev/tty.usbserial-A9O3R1XL"
-var portName = process.argv.length > 2 ? process.argv[3] : DEFAULT_SERIAL_COM;
+var defaultSerialPort = "/dev/tty.usbserial-A9O3R1XL"
+var portName = process.argv.length > 2 ? process.argv[3] : defaultSerialPort;
+var updateInterval = 30 // [msec]
+
+// ensure f(0) = f(1) = 0
+var envelopeFunction = {
+	square: function(x) { return 1 },
+	sin: function(x) { return Math.sin(x*Math.PI) },
+	sin3: function(x) { return Math.pow(Math.sin(x*Math.PI), 3) },
+	sinr3: function(x) { return Math.pow(Math.sin(x*Math.PI), 1/3) },
+}
 
 app.use(express.static('static'));
 
@@ -14,13 +23,34 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
-  console.log('a user connected');
-  socket.on('test', function (data) {
-  	console.log(data);
-  	if (data.waveform == 0) {
-	    send_command(1, data.strength, data.length);
-  	}
+	console.log('a user connected');
+	var updateIntervalTimer;
 
+	socket.on('test', function (data) {
+	var startDate = +(new Date())
+
+	if (data.envelopeFunction == 'default') {
+
+	}else{
+		if (!envelopeFunction[data.envelopeFunction]){
+			console.log("no such envelope function:", data.envelopeFunction)
+			return
+		}
+		console.log(data);
+		if (updateIntervalTimer){
+			clearInterval(updateIntervalTimer)
+		}
+		setInterval(function (arguments) {
+			var currentDate = +(new Date())
+			var elapsedRatio = (currentDate - startDate) / data.length
+			if (elapsedRatio < 0 || elapsedRatio > 1){
+				clearInterval(updateIntervalTimer)
+				return
+			}
+			var intensity = Math.round(envelopeFunction[data.envelopeFunction](elapsedRatio) * data.strength)
+			send_command(1, intensity, updateInterval)
+		}, updateInterval)
+	}
   });
 });
 
