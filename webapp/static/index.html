@@ -69,17 +69,53 @@
             </tr>
 
             </tbody>
-
-
           </table>
           <p>
             <input type="button" value="Submit" id="test-submit" class="btn">
-
             <input type="checkbox" id="test-repeat"> Repeat (Interval <input type="text" name="interval" id="test-interval" value="2000" size="6"> ms)
           </p>
         </div>
       </div>
+
+      <h3>Vibrato</h3>
+
+      <div class="row">
+        <div class="col-md-12">
+          <table class="table">
+            <tbody>
+            <tr>
+              <th>Frequency</th>
+              <td>
+                <input id="sing-freqency" type="range" name="range" min="10" max="100" value="50" step="1">
+                <span id="sing-freqency-label">5.0</span> Hz
+              </td>
+            </tr>
+            <tr>
+              <th>Intensity</th>
+              <td>
+                <input id="sing-strength" type="range" name="range" min="0" max="100" value="100">
+                <span id="sing-strength-label">100</span> %
+              </td>
+            </tr>
+
+            <tr>
+              <th>Pad</th>
+              <td>
+                <span style="color: gray; font-size: 80%;">↑Intensity</span><br />
+                <div id="sing-pad" style="width: 200px; height: 200px; border: 1px solid lightgray; display: inline-block;"></div>
+                <span style="color: gray; font-size: 80%;">Frequency→</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <p>
+            <input type="button" value="Vibrato" id="sing-vibrato" class="btn btn-primary">
+            <input type="button" value="Toggle" id="sing-vibrato-toggle" class="btn">
+          </p>
+        </div>
+      </div>
     </div> <!-- /container -->
+
     <script src="/socket.io/socket.io.js" type="text/javascript"></script>
     <script src="/bower_components/jquery/dist/jquery.min.js" type="text/javascript"></script>
     <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js" type="text/javascript"></script>
