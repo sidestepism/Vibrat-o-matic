@@ -61,7 +61,7 @@ http.listen(3000, function(){
 });
 
 var openEMSstim = new SerialPort(portName, {
-   baudRate: 19200,
+   baudRate: 57600,
    parser: SerialPort.parsers.readline("\n")
  });
 
