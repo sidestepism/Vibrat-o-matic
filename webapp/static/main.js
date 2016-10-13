@@ -1,6 +1,12 @@
+"use strict";
 var socket = io();
-$(function () {
+var youtubePlayer
+var onYouTubeIframeAPIReady;
+var onPlayerReady;
+var onPlayerStateChange;
 
+$(function () {
+	 /** test interface */
 	 var testEmitTimer;
 	 $("#test-length").change(function () {
 	 	$("#test-length-label").text($("#test-length").val())
@@ -33,6 +39,7 @@ $(function () {
 	 	}
 	 })
 
+	 /** sing interface */
 	var singEmitTimer;
 	$("#sing-freqency").change(function () {
 		$("#sing-freqency-label").text($("#sing-freqency").val() / 10)
@@ -40,6 +47,19 @@ $(function () {
 	$("#sing-strength").change(function () {
 		$("#sing-strength-label").text($("#sing-strength").val())
 	})
+	var updateDotPosition = function() {
+		if(singEmitTimer){
+			var freqRaito = ($("#sing-freqency").val() - $("#sing-freqency").attr("min"))/($("#sing-freqency").attr("max") - $("#sing-freqency").attr("min"))
+			var strengthRaito = ($("#sing-strength").val() - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
+		}else{
+			var freqRaito = 0
+			var strengthRaito = 0	
+		}		
+		$("#sing-pad-dot").css("bottom", strengthRaito * 200 - 8).css("left", freqRaito * 200 - 8)
+	}
+	$("#sing-pad-dot").on("dragstart", function() {
+		return false;		
+	}).css("pointer-events", "none")
 	var vibratoOn = function(){
 		if(singEmitTimer){
 			clearTimeout(singEmitTimer);
@@ -81,8 +101,8 @@ $(function () {
 	 	$("#sing-freqency-label").text(freq)
 	 	$("#sing-strength").val(strength)
 	 	$("#sing-strength-label").text(strength)
+	 	updateDotPosition();
 	}
-
 	var padMouseDownFlag = false
 	$("#sing-pad").mousedown(updateParam).mousedown(function () {
 		padMouseDownFlag = true
@@ -97,5 +117,34 @@ $(function () {
 		vibratoOff();
 	}).mousedown(vibratoOn).mouseup(vibratoOff);
 
+	/** song interface */
+    onYouTubeIframeAPIReady = function() {
+    	youtubePlayer = new YT.Player('youtubePlayer', {
+          videoId: 'vNhhAEupU4g',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+        console.log("Youtube iframe API Loaded");
+    	console.log(youtubePlayer)
+        setInterval(showCurrentTime, 200);
+    }
+    onPlayerReady = function() {
+    	console.log("Youtube iframe API Player Ready")
+    }
+	onPlayerStateChange = function() {
+    	console.log("Youtube iframe API State Changed")
+	};
 
+    console.log("Youtube iframe API Loading");
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    var youtubePlayer = null;
+    
+    function showCurrentTime() {
+        if (youtubePlayer.getCurrentTime) console.log(youtubePlayer.getCurrentTime());
+    }
 })

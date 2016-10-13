@@ -20,7 +20,7 @@ var envelopeFunction = {
 app.use(express.static('static'));
 
 app.get('/', function(req, res){
-  res.sendFile('index.html');
+  res.sendFile('static/index.html');
 });
 
 io.on('connection', function(socket){
