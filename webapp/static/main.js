@@ -147,4 +147,10 @@ $(function () {
     function showCurrentTime() {
         if (youtubePlayer.getCurrentTime) console.log(youtubePlayer.getCurrentTime());
     }
+	$("#youtube-switch").children().each(function(e){
+		$(this).click(function() {
+			youtubePlayer.cueVideoById($(this).attr("x-youtube-id"), $(this).attr("x-youtube-from"))
+
+		})
+	});
 })
