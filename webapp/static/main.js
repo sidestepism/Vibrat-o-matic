@@ -174,6 +174,7 @@ $(function () {
 	 * Youtube song interface
 	 * +++++++++++++++++++++++++++++
 	 */
+    var loadSettingTimer = null;
     onYouTubeIframeAPIReady = function() {
     	youtubePlayer = new YT.Player('youtube-player', {
           videoId: 'vNhhAEupU4g',
@@ -221,11 +222,11 @@ $(function () {
 			var setting;
 			if(!youtubePlaying){
 				conosle.log("loadNextSetting: youtubeplaying flag is off");
-				setTimeout(loadNextSetting, 100);
+				loadSettingTimer = setTimeout(loadNextSetting, 100);
 			}
 			if(youtubePlayer.getPlayerState() != 1){
 				console.log("loadNextSetting: youtubePlayer.getPlayerState() is not playing state");
-				setTimeout(loadNextSetting, 100);
+				loadSettingTimer = setTimeout(loadNextSetting, 100);
 			}
 			if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
 				console.log("loading setting:", setting)
@@ -251,16 +252,20 @@ $(function () {
 				updateDotPosition();
 				youtubeSettingsSeekIndex ++
 				if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
-					var timer = setTimeout(loadNextSetting, (setting.timeStamp - youtubePlayer.getCurrentTime()) * 1000);
+					loadSettingTimer = setTimeout(loadNextSetting, (setting.timeStamp - youtubePlayer.getCurrentTime()) * 1000);
 				}
 			}else{
 				console.log("loadNextSetting: Seekindex out of range", youtubeSettingsSeekIndex)
 			}
 		}
+
 		$("#youtube-record").attr("disabled", true)
 		$("#youtube-play").attr("disabled", true)
 		youtubePlayer.playVideo();
-		setTimeout(loadNextSetting, 100);
+		if (loadSettingTimer){
+			clearTimeout(loadSettingTimer)
+		}
+		loadSettingTimer = setTimeout(loadNextSetting, 100);
 	});
 	$("#youtube-stop").click(function() {
 		youtubeRecording = false;		
