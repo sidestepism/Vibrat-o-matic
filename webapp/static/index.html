@@ -86,8 +86,8 @@
             <tr>
               <th>Frequency</th>
               <td>
-                <input id="sing-freqency" type="range" name="range" min="10" max="70" value="40" step="1">
-                <span id="sing-freqency-label">5.0</span> Hz
+                <input id="sing-frequency" type="range" name="range" min="10" max="70" value="40" step="1">
+                <span id="sing-frequency-label">5.0</span> Hz
               </td>
             </tr>
             <tr>
@@ -128,8 +128,17 @@
               <button type="button" class="btn btn-default" x-youtube-id="L0MK7qz13bU" x-youtube-id="0">Let it go</button>
               <button type="button" class="btn btn-default" x-youtube-id="yqzCwcL9xDc" x-youtube-id="0">千の風になって</button>
             </div>            
+
+            <span id="youtube-record" class="btn btn-danger"><span class="glyphicon glyphicon-record"></span> Record</span>
+            <span id="youtube-play" class="btn btn-primary"><span class="glyphicon glyphicon-play"></span> Play</span>
+            <span id="youtube-stop" class="btn btn-default"><span class="glyphicon glyphicon-stop"></span> Stop</span>
+            <br />
+
           </div>
-          <div id="youtubePlayer" style="width: 600px; height: 400px; border: 1px solid lightgray; display: inline-block;"></div>
+          <div id="youtube-player" style="width: 600px; height: 400px; border: 1px solid lightgray; display: inline-block;"></div>
+          <p>
+            <textarea id="youtube-settings" cols="60" rows="10"></textarea>
+          </p>
         </div>
       </div>
     </div> <!-- /container -->

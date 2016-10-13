@@ -4,6 +4,14 @@ var youtubePlayer
 var onYouTubeIframeAPIReady;
 var onPlayerReady;
 var onPlayerStateChange;
+var youtubeRecording = false;
+var youtubePlaying = false;
+var lastParamUpdated = 0;
+
+// output JSON to textarea
+var youtubeSettings = [];
+// iterator
+var youtubeSettingsSeekIndex = 0;
 
 $(function () {
 	 /** test interface */
@@ -41,15 +49,15 @@ $(function () {
 
 	 /** sing interface */
 	var singEmitTimer;
-	$("#sing-freqency").change(function () {
-		$("#sing-freqency-label").text($("#sing-freqency").val() / 10)
+	$("#sing-frequency").change(function () {
+		$("#sing-frequency-label").text($("#sing-frequency").val() / 10)
 	});
 	$("#sing-strength").change(function () {
 		$("#sing-strength-label").text($("#sing-strength").val())
 	})
 	var updateDotPosition = function() {
 		if(singEmitTimer){
-			var freqRaito = ($("#sing-freqency").val() - $("#sing-freqency").attr("min"))/($("#sing-freqency").attr("max") - $("#sing-freqency").attr("min"))
+			var freqRaito = ($("#sing-frequency").val() - $("#sing-frequency").attr("min"))/($("#sing-frequency").attr("max") - $("#sing-frequency").attr("min"))
 			var strengthRaito = ($("#sing-strength").val() - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
 		}else{
 			var freqRaito = 0
@@ -60,12 +68,14 @@ $(function () {
 	$("#sing-pad-dot").on("dragstart", function() {
 		return false;		
 	}).css("pointer-events", "none")
+
 	var vibratoOn = function(){
 		if(singEmitTimer){
 			clearTimeout(singEmitTimer);
+			return
 		}
 		var emit = function () {
-			var interval = Math.round(1000 / ($("#sing-freqency").val() / 10))
+			var interval = Math.round(1000 / ($("#sing-frequency").val() / 10))
 			socket.emit('test', {
 				// add + for numeric value
 				length: Math.round(interval),
@@ -77,12 +87,37 @@ $(function () {
 		}
 		emit();
 		$("#sing-pad").css("background-color", "lightgray");
+
+	 	// 録画
+		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
+			console.log("record", youtubePlayer.getCurrentTime())
+			youtubeSettings.push({
+				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
+				event: "vibratoOn",
+				frequency: $("#sing-frequency").val(),
+				strength: $("#sing-strength").val()
+			})
+			updateSettingJSON();
+		}
 	}
 	var vibratoOff = function(){
+		if (!singEmitTimer) return;
 		clearTimeout(singEmitTimer);
 		singEmitTimer = false;
 		$("#sing-pad").css("background-color", "white");
+
+	 	// 録画
+		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
+			youtubeSettings.push({
+				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
+				event: "vibratoOff",
+				frequency: $("#sing-frequency").attr("min"),
+				strength: $("#sing-strength").attr("min")
+			})
+			updateSettingJSON();
+		}
 	}
+	
 	$("#sing-vibrato").mousedown(vibratoOn).mouseup(vibratoOff)
 	$("#sing-vibrato-toggle").click(function () {
 		if(singEmitTimer) {
@@ -93,15 +128,32 @@ $(function () {
 	})
 
 	var updateParam = function (evt) {
-		// console.log(evt);
-	 // 	console.log(evt.offsetX, evt.offsetY, $(evt.currentTarget).height(), $(evt.currentTarget).width())
+		if (!singEmitTimer){
+			return
+		}
+		if (+new Date() - lastParamUpdated < 50){
+			return
+		}
+		lastParamUpdated = +new Date();
+
 	 	var freq = Math.round(10 + evt.offsetX / $(evt.currentTarget).width() * 6 * 10) / 10
 	 	var strength = 100 - Math.round(evt.offsetY / $(evt.currentTarget).height() * 100)
-	 	$("#sing-freqency").val(freq * 10)
-	 	$("#sing-freqency-label").text(freq)
+	 	$("#sing-frequency").val(freq * 10)
+	 	$("#sing-frequency-label").text(freq)
 	 	$("#sing-strength").val(strength)
 	 	$("#sing-strength-label").text(strength)
 	 	updateDotPosition();
+
+	 	// 録画
+		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
+			youtubeSettings.push({
+				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
+				event: "updateParam",
+				frequency: $("#sing-frequency").val(),
+				strength: $("#sing-strength").val()
+			})
+			updateSettingJSON();
+		}
 	}
 	var padMouseDownFlag = false
 	$("#sing-pad").mousedown(updateParam).mousedown(function () {
@@ -117,9 +169,13 @@ $(function () {
 		vibratoOff();
 	}).mousedown(vibratoOn).mouseup(vibratoOff);
 
-	/** song interface */
+	/*
+	 * +++++++++++++++++++++++++++++
+	 * Youtube song interface
+	 * +++++++++++++++++++++++++++++
+	 */
     onYouTubeIframeAPIReady = function() {
-    	youtubePlayer = new YT.Player('youtubePlayer', {
+    	youtubePlayer = new YT.Player('youtube-player', {
           videoId: 'vNhhAEupU4g',
           events: {
             'onReady': onPlayerReady,
@@ -127,8 +183,6 @@ $(function () {
           }
         });
         console.log("Youtube iframe API Loaded");
-    	console.log(youtubePlayer)
-        setInterval(showCurrentTime, 200);
     }
     onPlayerReady = function() {
     	console.log("Youtube iframe API Player Ready")
@@ -143,14 +197,77 @@ $(function () {
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     var youtubePlayer = null;
-    
-    function showCurrentTime() {
-        if (youtubePlayer.getCurrentTime) console.log(youtubePlayer.getCurrentTime());
+    function updateSettingJSON(){
+    	$("#youtube-settings").val(JSON.stringify(youtubeSettings))
     }
 	$("#youtube-switch").children().each(function(e){
 		$(this).click(function() {
 			youtubePlayer.cueVideoById($(this).attr("x-youtube-id"), $(this).attr("x-youtube-from"))
-
 		})
 	});
+	$("#youtube-record").click(function() {
+		youtubeRecording = true;
+		youtubePlaying = false;
+		$("#youtube-record").attr("disabled", true)
+		$("#youtube-play").attr("disabled", true)
+		youtubePlayer.playVideo()
+	});
+	$("#youtube-play").click(function() {
+		youtubeSettings = JSON.parse($("#youtube-settings").val());
+		youtubeRecording = false;
+		youtubePlaying = true;
+		youtubeSettingsSeekIndex = 0;
+		function loadNextSetting(){
+			var setting;
+			if(!youtubePlaying){
+				conosle.log("loadNextSetting: youtubeplaying flag is off");
+				setTimeout(loadNextSetting, 100);
+			}
+			if(youtubePlayer.getPlayerState() != 1){
+				console.log("loadNextSetting: youtubePlayer.getPlayerState() is not playing state");
+				setTimeout(loadNextSetting, 100);
+			}
+			if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
+				console.log("loading setting:", setting)
+				switch (setting.event) {
+					case "vibratoOn":
+						$("#sing-frequency").val(setting.frequency);
+						$("#sing-strength").val(setting.strength);
+						vibratoOn();
+						break;
+					case "vibratoOff":
+						$("#sing-frequency").val(setting.frequency);
+						$("#sing-strength").val(setting.strength);
+						vibratoOff();
+						break;
+					case "updateParam":
+						$("#sing-frequency").val(setting.frequency);
+						$("#sing-strength").val(setting.strength);
+						break;
+					default:
+						console.log("unknown event:", setting.event)
+						break;
+				}
+				updateDotPosition();
+				youtubeSettingsSeekIndex ++
+				if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
+					var timer = setTimeout(loadNextSetting, (setting.timeStamp - youtubePlayer.getCurrentTime()) * 1000);
+				}
+			}else{
+				console.log("loadNextSetting: Seekindex out of range", youtubeSettingsSeekIndex)
+			}
+		}
+		$("#youtube-record").attr("disabled", true)
+		$("#youtube-play").attr("disabled", true)
+		youtubePlayer.playVideo();
+		setTimeout(loadNextSetting, 100);
+	});
+	$("#youtube-stop").click(function() {
+		youtubeRecording = false;		
+		youtubePlaying = false;
+		$("#youtube-record").attr("disabled", false)
+		$("#youtube-play").attr("disabled", false)
+		youtubePlayer.stopVideo()
+	});
+
 })
