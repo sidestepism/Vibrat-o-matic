@@ -32,7 +32,7 @@ io.on('connection', function(socket){
 	if (data.updateInterval) updateInterval = data.updateInterval
 
 	if (data.envelopeFunction == 'default') {
-		send_command(1, data.strength, data.length)
+		send_command(3, data.strength, data.length)
 	}else{
 		if (!envelopeFunction[data.envelopeFunction]){
 			console.log("no such envelope function:", data.envelopeFunction)
@@ -49,7 +49,7 @@ io.on('connection', function(socket){
 				return
 			}
 			var intensity = Math.round(envelopeFunction[data.envelopeFunction](elapsedRatio) * data.strength)
-			send_command(1, intensity, updateInterval)
+			send_command(3, intensity, updateInterval)
 		}, updateInterval)
 	}
   });
@@ -91,7 +91,7 @@ function send_command(channel, intensity, duration) {
 	var command = ""
 	console.log("||||||||||||||||||||||||||||||".substring(0, Math.round(intensity / 3)))
 	if (is_numeric(channel) && is_numeric(intensity) && is_numeric(duration)) {
-		if (channel == 1 || channel == 2) {
+		if (channel == 1 || channel == 2 || channel == 3) {
 			command = "C" + (channel -1);
 		} else {
 			console.log("ERROR: Command malformatted, will not send to openEMSstim");
