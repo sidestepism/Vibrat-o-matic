@@ -23,6 +23,7 @@ $(function () {
 	 	$("#test-strength-label").text($("#test-strength").val())
 	 })
 	 $("#test-submit").click(function () {
+	 	console.log("submit")
 	 	var afn = function () {
 			socket.emit('test', {
 				// add + for numeric value
@@ -37,6 +38,8 @@ $(function () {
 			if(testEmitTimer) clearInterval(testEmitTimer);
 			testEmitTimer = setInterval(afn, +Math.max($("#test-interval").val(), 50))
 	 	}
+	 	
+	 	afn();
 	 });
 
 	 $("#test-repeat").change(function () {
