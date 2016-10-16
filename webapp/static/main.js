@@ -63,9 +63,11 @@ $(function () {
 		if(singEmitTimer){
 			var freqRaito = ($("#sing-frequency").val() - $("#sing-frequency").attr("min"))/($("#sing-frequency").attr("max") - $("#sing-frequency").attr("min"))
 			var strengthRaito = ($("#sing-strength").val() - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
+			$("#sing-pad").css("background-color", "lightgray");
 		}else{
 			var freqRaito = 0
 			var strengthRaito = 0	
+			$("#sing-pad").css("background-color", "white");
 		}		
 		$("#sing-pad-dot").css("bottom", strengthRaito * 200 - 8).css("left", freqRaito * 200 - 8)
 	}
@@ -74,6 +76,7 @@ $(function () {
 	}).css("pointer-events", "none")
 
 	function vibratoOn(){
+		console.log("vibratoOn")
 		if(singEmitTimer){
 			clearTimeout(singEmitTimer);
 			return
@@ -93,9 +96,7 @@ $(function () {
 			console.log("strength", +$("#sing-strength").val(), "freq", $("#sing-frequency").val()/10)
 			singEmitTimer = setTimeout(emit, interval);
 		}
-		// 遅延させることでUI value updateを反映させる
-		setTimeout(emit, 1);
-		$("#sing-pad").css("background-color", "lightgray");
+		emit();
 
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
@@ -108,13 +109,13 @@ $(function () {
 			})
 			updateSettingJSON();
 		}
+	 	updateDotPosition();
 	}
 	function vibratoOff(){
 		console.log("vibratoOff")
 		if (!singEmitTimer) return;
 		clearTimeout(singEmitTimer);
 		singEmitTimer = false;
-		$("#sing-pad").css("background-color", "white");
 		$("#sing-frequency").val($("#sing-frequency").attr("min"))
 		$("#sing-strength").val($("#sing-strength").attr("min"))
 	 	// 録画
@@ -207,8 +208,12 @@ $(function () {
 	onPlayerStateChange = function() {
 		if (youtubePlayer.getPlayerState() == 1){
 			youtubeSettingsSeekIndex = 0
+			$("#youtube-record").attr("disabled", true);
+			$("#youtube-play").attr("disabled", true);
+		} else {
+			$("#youtube-record").attr("disabled", false);
+			$("#youtube-play").attr("disabled", false);			
 		}
-    	console.log("Youtube iframe API State Changed")
 	};
     console.log("Youtube iframe API Loading");
     var tag = document.createElement('script');
@@ -236,17 +241,17 @@ $(function () {
 	function loadCurrentParameter(){
 		var setting;
 		if (!youtubePlaying){
-			conosle.log("loadNextSetting: youtubeplaying flag is off");
+			// console.log("loadCurrentParameter: youtubeplaying flag is off");
 			return
 		}
 		if (youtubePlayer.getPlayerState() != 1){
-			console.log("loadNextSetting: youtubePlayer.getPlayerState() is not playing state");
+			// console.log("loadCurrentParameter: youtubePlayer.getPlayerState() is not playing state");
 			return
 		}
 		if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
-			if (setting.timeStamp < youtubePlayer.getCurrentTime()){
+			if (setting.timeStamp > youtubePlayer.getCurrentTime()){
 				// do nothing
-				console.log("loadNextSetting: no op");
+				// console.log("loadCurrentParameter: no op");
 				return
 			}
 			switch (setting.event) {
@@ -263,18 +268,21 @@ $(function () {
 				case "updateParam":
 					$("#sing-frequency").val(setting.frequency);
 					$("#sing-strength").val(setting.strength);
+					updateDotPosition();
 					break;
 				default:
 					console.log("unknown event:", setting.event)
 					break;
 			}
-			console.log("loadNextSetting:", youtubeSettingsSeekIndex);
+			// console.log("loadCurrentParameter:", youtubeSettingsSeekIndex);
 			youtubeSettingsSeekIndex ++;
 			updateDotPosition();
+			loadCurrentParameter();
 		}else{
-			console.log("loadNextSetting: Seekindex out of range", youtubeSettingsSeekIndex)
+			// console.log("loadCurrentParameter: Seekindex out of range", youtubeSettingsSeekIndex)
 		}
 	}
+	var loadParameterTimer = setInterval(loadCurrentParameter, 50);
 
 	$("#youtube-switch").children().each(function(e){
 		$(this).click(function() {
@@ -286,8 +294,6 @@ $(function () {
 		youtubeSettingsSeekIndex = 0;
 		youtubeRecording = true;
 		youtubePlaying = false;
-		$("#youtube-record").attr("disabled", true);
-		$("#youtube-play").attr("disabled", true);
 		youtubePlayer.playVideo();
 		youtubePlayer.seekTo(playStartTimestamp, true);
 	});
@@ -301,21 +307,14 @@ $(function () {
 		youtubeRecording = false;
 		youtubePlaying = true;
 		youtubeSettingsSeekIndex = 0;
-
-
-		$("#youtube-record").attr("disabled", true);
-		$("#youtube-play").attr("disabled", true);
 		youtubePlayer.seekTo(playStartTimestamp, true);
 		if (loadSettingTimer){
 			clearTimeout(loadSettingTimer)
 		}
-		loadSettingTimer = setTimeout(loadNextSetting, 100);
 	});
 	$("#youtube-stop").click(function() {
 		youtubeRecording = false;		
 		youtubePlaying = false;
-		$("#youtube-record").attr("disabled", false)
-		$("#youtube-play").attr("disabled", false)
 		youtubeSettingsSeekIndex = 0;
 		youtubePlayer.stopVideo()
 		if (loadSettingTimer){
