@@ -39,7 +39,6 @@ $(function () {
 			if(testEmitTimer) clearInterval(testEmitTimer);
 			testEmitTimer = setInterval(afn, +Math.max($("#test-interval").val(), 50))
 	 	}
-	 	
 	 	afn();
 	 });
 
@@ -62,14 +61,16 @@ $(function () {
 	function updateDotPosition() {
 		if(singEmitTimer){
 			var freqRaito = ($("#sing-frequency").val() - $("#sing-frequency").attr("min"))/($("#sing-frequency").attr("max") - $("#sing-frequency").attr("min"))
-			var strengthRaito = ($("#sing-strength").val() - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
+			var strengthRaito = (targetStrength - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
 			$("#sing-pad").css("background-color", "lightgray");
 		}else{
-			var freqRaito = 0
-			var strengthRaito = 0	
+			var freqRaito = 1
+			var strengthRaito = 0
 			$("#sing-pad").css("background-color", "white");
 		}		
 		$("#sing-pad-dot").css("bottom", strengthRaito * 200 - 8).css("left", freqRaito * 200 - 8)
+	 	$("#sing-frequency-label").text($("#sing-frequency").val()/10)
+	 	$("#sing-strength-label").text($("#sing-strength").val())
 	}
 	$("#sing-pad-dot").on("dragstart", function() {
 		return false;		
@@ -116,15 +117,13 @@ $(function () {
 		if (!singEmitTimer) return;
 		clearTimeout(singEmitTimer);
 		singEmitTimer = false;
-		$("#sing-frequency").val($("#sing-frequency").attr("min"))
-		$("#sing-strength").val($("#sing-strength").attr("min"))
+		$("#sing-frequency").val($("#sing-frequency").attr("max"))
+		targetStrength = 0
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
 			youtubeSettings.push({
 				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
-				event: "vibratoOff",
-				frequency: $("#sing-frequency").attr("min"),
-				strength: $("#sing-strength").attr("min")
+				event: "vibratoOff"
 			})
 			updateSettingJSON();
 		}
@@ -149,9 +148,7 @@ $(function () {
 	 	var freq = Math.round(10 + evt.offsetX / $(evt.currentTarget).width() * 9 * 10) / 10
 	 	var strength = 100 - Math.round(evt.offsetY / $(evt.currentTarget).height() * 100)
 	 	$("#sing-frequency").val(freq * 10)
-	 	$("#sing-frequency-label").text(freq)
-	 	$("#sing-strength").val(strength)
-	 	$("#sing-strength-label").text(strength)
+	 	targetStrength = strength
 	 	updateDotPosition();
 
 	 	// 録画
@@ -238,7 +235,16 @@ $(function () {
     }
     loadSettingsFromLocalStorage();
 
-	function loadCurrentParameter(){
+	function UIUpdate(){
+		// called every 50ms
+		if (targetStrength !== null){
+			var strength = +$("#sing-strength").val();
+			strength += (targetStrength - strength) * 0.2
+			$("#sing-strength").val(Math.round(strength))
+		}
+		updateDotPosition();
+
+		// update parameter if playing
 		var setting;
 		if (!youtubePlaying){
 			// console.log("loadCurrentParameter: youtubeplaying flag is off");
@@ -256,13 +262,9 @@ $(function () {
 			}
 			switch (setting.event) {
 				case "vibratoOn":
-					$("#sing-frequency").val(setting.frequency);
-					$("#sing-strength").val(setting.strength);
 					vibratoOn();
 					break;
 				case "vibratoOff":
-					$("#sing-frequency").val(setting.frequency);
-					$("#sing-strength").val(setting.strength);
 					vibratoOff();
 					break;
 				case "updateParam":
@@ -271,18 +273,16 @@ $(function () {
 					updateDotPosition();
 					break;
 				default:
-					console.log("unknown event:", setting.event)
 					break;
 			}
 			// console.log("loadCurrentParameter:", youtubeSettingsSeekIndex);
 			youtubeSettingsSeekIndex ++;
-			updateDotPosition();
 			loadCurrentParameter();
 		}else{
 			// console.log("loadCurrentParameter: Seekindex out of range", youtubeSettingsSeekIndex)
 		}
 	}
-	var loadParameterTimer = setInterval(loadCurrentParameter, 50);
+	var loadParameterTimer = setInterval(UIUpdate, 50);
 
 	$("#youtube-switch").children().each(function(e){
 		$(this).click(function() {
@@ -322,8 +322,50 @@ $(function () {
 		}
 		vibratoOff();
 	});
-
 	$(window).bind('beforeunload', function(event) {
 		localStorage.youtubeSettings = JSON.stringify(youtubeSettings);
 	});
+
+	/*
+	 * +++++++++++++++++++++++++++++
+	 * Force Vibrato
+	 * +++++++++++++++++++++++++++++
+	 */
+
+	var targetStrength = null
+	$('#sing-vibrato-force-button').pressure({
+	  start: function(event){
+	  	vibratoOn();
+	  	targetStrength = 0
+	  	$("#vibrato-force-bar").css("width", "0%")
+	  },
+	  end: function(){
+	  	vibratoOff();
+	  	targetStrength = 0
+	  	$("#vibrato-force-bar").css("width", "0%")
+	  },
+	  startDeepPress: function(event){
+	  },
+	  endDeepPress: function(){
+	  },
+	  change: function(force, event){
+	  	if (force > 0.5){
+		  	targetStrength = Pressure.map(force, 0.5, 1, 95, 100);
+	  	}else if(force > 0.1){
+		  	targetStrength = Pressure.map(force, 0.1, 0.5, 50, 95);
+	  	}else{
+		  	targetStrength = Pressure.map(force, 0, 0.1, 0, 50);
+	  	}
+	  	$("#vibrato-force-bar").css("width", Math.round(targetStrength) + "%")
+	  	$("#vibrato-force-bar").text(Math.round(targetStrength) + "%")
+	    // this is called every time there is a change in pressure
+	    // force will always be a value from 0 to 1 on mobile and desktop
+	  },
+	  unsupported: function(){
+	    // this is called once there is a touch on the element and the device or browser does not support Force or 3D touch
+	    $("#sing-force-pad").hide();
+	  }
+	});
+
+
 })
