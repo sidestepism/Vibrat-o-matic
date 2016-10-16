@@ -85,6 +85,7 @@ $(function () {
 				strength: +$("#sing-strength").val(),
 				envelopeFunction: "sin",
 				updateInterval: 20
+				envelopeFunction: $("#sing-envelope").val(),
 			});
 			singEmitTimer = setTimeout(emit, interval);
 		}
