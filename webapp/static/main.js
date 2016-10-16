@@ -83,7 +83,6 @@ $(function () {
 				// add + for numeric value
 				length: Math.round(interval),
 				strength: +$("#sing-strength").val(),
-				envelopeFunction: "sin",
 				updateInterval: +$("#sing-update-interval")
 				envelopeFunction: $("#sing-envelope").val(),
 			});
