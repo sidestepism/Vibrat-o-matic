@@ -13,6 +13,7 @@ var youtubeSettings = [];
 // iterator
 var youtubeSettingsSeekIndex = 0;
 
+
 $(function () {
 	 /** test interface */
 	 var testEmitTimer;
@@ -58,7 +59,7 @@ $(function () {
 	$("#sing-strength").change(function () {
 		$("#sing-strength-label").text($("#sing-strength").val())
 	})
-	var updateDotPosition = function() {
+	function updateDotPosition() {
 		if(singEmitTimer){
 			var freqRaito = ($("#sing-frequency").val() - $("#sing-frequency").attr("min"))/($("#sing-frequency").attr("max") - $("#sing-frequency").attr("min"))
 			var strengthRaito = ($("#sing-strength").val() - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
@@ -72,7 +73,7 @@ $(function () {
 		return false;		
 	}).css("pointer-events", "none")
 
-	var vibratoOn = function(){
+	function vibratoOn(){
 		if(singEmitTimer){
 			clearTimeout(singEmitTimer);
 			return
@@ -108,7 +109,7 @@ $(function () {
 			updateSettingJSON();
 		}
 	}
-	var vibratoOff = function(){
+	function vibratoOff(){
 		console.log("vibratoOff")
 		if (!singEmitTimer) return;
 		clearTimeout(singEmitTimer);
@@ -138,7 +139,7 @@ $(function () {
 		}
 	})
 
-	var updateParam = function (evt) {
+	function updateParam(evt) {
 		if (evt.type == "mousemove" && +new Date() - lastParamUpdated < 50){
 			return
 		}
@@ -204,6 +205,9 @@ $(function () {
     	console.log("Youtube iframe API Player Ready")
     }
 	onPlayerStateChange = function() {
+		if (youtubePlayer.getPlayerState() == 1){
+			youtubeSettingsSeekIndex = 0
+		}
     	console.log("Youtube iframe API State Changed")
 	};
     console.log("Youtube iframe API Loading");
@@ -224,11 +228,53 @@ $(function () {
 	    if(window.localStorage && window.localStorage.youtubeSettings){
 	    	youtubeSettings = JSON.parse(window.localStorage.youtubeSettings);
 	    }
-	    if(youtubeSettings.length) youtubeSettings = [];
+	    if(!youtubeSettings.length) youtubeSettings = [];
 	    updateSettingJSON();
     }
     loadSettingsFromLocalStorage();
 
+	function loadCurrentParameter(){
+		var setting;
+		if (!youtubePlaying){
+			conosle.log("loadNextSetting: youtubeplaying flag is off");
+			return
+		}
+		if (youtubePlayer.getPlayerState() != 1){
+			console.log("loadNextSetting: youtubePlayer.getPlayerState() is not playing state");
+			return
+		}
+		if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
+			if (setting.timeStamp < youtubePlayer.getCurrentTime()){
+				// do nothing
+				console.log("loadNextSetting: no op");
+				return
+			}
+			switch (setting.event) {
+				case "vibratoOn":
+					$("#sing-frequency").val(setting.frequency);
+					$("#sing-strength").val(setting.strength);
+					vibratoOn();
+					break;
+				case "vibratoOff":
+					$("#sing-frequency").val(setting.frequency);
+					$("#sing-strength").val(setting.strength);
+					vibratoOff();
+					break;
+				case "updateParam":
+					$("#sing-frequency").val(setting.frequency);
+					$("#sing-strength").val(setting.strength);
+					break;
+				default:
+					console.log("unknown event:", setting.event)
+					break;
+			}
+			console.log("loadNextSetting:", youtubeSettingsSeekIndex);
+			youtubeSettingsSeekIndex ++;
+			updateDotPosition();
+		}else{
+			console.log("loadNextSetting: Seekindex out of range", youtubeSettingsSeekIndex)
+		}
+	}
 
 	$("#youtube-switch").children().each(function(e){
 		$(this).click(function() {
@@ -238,7 +284,6 @@ $(function () {
 	});
 	$("#youtube-record").click(function() {
 		youtubeSettingsSeekIndex = 0;
-
 		youtubeRecording = true;
 		youtubePlaying = false;
 		$("#youtube-record").attr("disabled", true);
@@ -257,48 +302,6 @@ $(function () {
 		youtubePlaying = true;
 		youtubeSettingsSeekIndex = 0;
 
-		function loadNextSetting(){
-			var setting;
-			if (!youtubePlaying){
-				conosle.log("loadNextSetting: youtubeplaying flag is off");
-				loadSettingTimer = setTimeout(loadNextSetting, 100);
-				return
-			}
-			if (youtubePlayer.getPlayerState() != 1){
-				console.log("loadNextSetting: youtubePlayer.getPlayerState() is not playing state");
-				loadSettingTimer = setTimeout(loadNextSetting, 100);
-				return
-			}
-			if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
-				console.log("loading setting:", setting)
-				switch (setting.event) {
-					case "vibratoOn":
-						$("#sing-frequency").val(setting.frequency);
-						$("#sing-strength").val(setting.strength);
-						vibratoOn();
-						break;
-					case "vibratoOff":
-						$("#sing-frequency").val(setting.frequency);
-						$("#sing-strength").val(setting.strength);
-						vibratoOff();
-						break;
-					case "updateParam":
-						$("#sing-frequency").val(setting.frequency);
-						$("#sing-strength").val(setting.strength);
-						break;
-					default:
-						console.log("unknown event:", setting.event)
-						break;
-				}
-				updateDotPosition();
-				youtubeSettingsSeekIndex ++
-				if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
-					loadSettingTimer = setTimeout(loadNextSetting, (setting.timeStamp - youtubePlayer.getCurrentTime()) * 1000);
-				}
-			}else{
-				console.log("loadNextSetting: Seekindex out of range", youtubeSettingsSeekIndex)
-			}
-		}
 
 		$("#youtube-record").attr("disabled", true);
 		$("#youtube-play").attr("disabled", true);
