@@ -189,6 +189,7 @@ $(function () {
 	 * +++++++++++++++++++++++++++++
 	 */
     var loadSettingTimer = null;
+    var playStartTimestamp = 0
     onYouTubeIframeAPIReady = function() {
     	youtubePlayer = new YT.Player('youtube-player', {
           videoId: 'vNhhAEupU4g',
@@ -205,42 +206,68 @@ $(function () {
 	onPlayerStateChange = function() {
     	console.log("Youtube iframe API State Changed")
 	};
-
     console.log("Youtube iframe API Loading");
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     var youtubePlayer = null;
+
+
     function updateSettingJSON(){
     	$("#youtube-settings").val(JSON.stringify(youtubeSettings))
     }
+    /*
+     localStorageから設定を読み込み
+     */
+    function loadSettingsFromLocalStorage(){
+	    if(window.localStorage && window.localStorage.youtubeSettings){
+	    	youtubeSettings = JSON.parse(window.localStorage.youtubeSettings);
+	    }
+	    if(youtubeSettings.length) youtubeSettings = [];
+	    updateSettingJSON();
+    }
+    loadSettingsFromLocalStorage();
+
+
 	$("#youtube-switch").children().each(function(e){
 		$(this).click(function() {
-			youtubePlayer.cueVideoById($(this).attr("x-youtube-id"), $(this).attr("x-youtube-from"))
+			youtubePlayer.cueVideoById($(this).attr("x-youtube-id"), $(this).attr("x-youtube-playAt"))
+			playStartTimestamp = +$(this).attr("x-youtube-playAt")
 		})
 	});
 	$("#youtube-record").click(function() {
+		youtubeSettingsSeekIndex = 0;
+
 		youtubeRecording = true;
 		youtubePlaying = false;
-		$("#youtube-record").attr("disabled", true)
-		$("#youtube-play").attr("disabled", true)
-		youtubePlayer.playVideo()
+		$("#youtube-record").attr("disabled", true);
+		$("#youtube-play").attr("disabled", true);
+		youtubePlayer.playVideo();
+		youtubePlayer.seekTo(playStartTimestamp, true);
 	});
 	$("#youtube-play").click(function() {
-		youtubeSettings = JSON.parse($("#youtube-settings").val());
+		try{
+			youtubeSettings = JSON.parse($("#youtube-settings").val());
+		}catch(e){
+			youtubeSettings = []
+			alert("JSON parse failed")
+		}
 		youtubeRecording = false;
 		youtubePlaying = true;
 		youtubeSettingsSeekIndex = 0;
+
 		function loadNextSetting(){
 			var setting;
-			if(!youtubePlaying){
+			if (!youtubePlaying){
 				conosle.log("loadNextSetting: youtubeplaying flag is off");
 				loadSettingTimer = setTimeout(loadNextSetting, 100);
+				return
 			}
-			if(youtubePlayer.getPlayerState() != 1){
+			if (youtubePlayer.getPlayerState() != 1){
 				console.log("loadNextSetting: youtubePlayer.getPlayerState() is not playing state");
 				loadSettingTimer = setTimeout(loadNextSetting, 100);
+				return
 			}
 			if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
 				console.log("loading setting:", setting)
@@ -273,9 +300,9 @@ $(function () {
 			}
 		}
 
-		$("#youtube-record").attr("disabled", true)
-		$("#youtube-play").attr("disabled", true)
-		youtubePlayer.playVideo();
+		$("#youtube-record").attr("disabled", true);
+		$("#youtube-play").attr("disabled", true);
+		youtubePlayer.seekTo(playStartTimestamp, true);
 		if (loadSettingTimer){
 			clearTimeout(loadSettingTimer)
 		}
@@ -294,4 +321,7 @@ $(function () {
 		vibratoOff();
 	});
 
+	$(window).bind('beforeunload', function(event) {
+		localStorage.youtubeSettings = JSON.stringify(youtubeSettings);
+	});
 })
