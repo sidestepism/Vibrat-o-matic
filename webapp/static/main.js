@@ -77,18 +77,23 @@ $(function () {
 			clearTimeout(singEmitTimer);
 			return
 		}
+		console.log("strength", +$("#sing-strength").val(), "freq", $("#sing-frequency").val()/10)
+
 		var emit = function () {
 			var interval = Math.round(1000 / ($("#sing-frequency").val() / 10))
 			socket.emit('test', {
 				// add + for numeric value
 				length: Math.round(interval),
 				strength: +$("#sing-strength").val(),
+				envelopeFunction: "sin",
+				updateInterval: +$("#sing-update-interval"),
 				envelopeFunction: $("#sing-envelope").val(),
-				updateInterval: +$("#sing-update-interval")
 			});
+			console.log("strength", +$("#sing-strength").val(), "freq", $("#sing-frequency").val()/10)
 			singEmitTimer = setTimeout(emit, interval);
 		}
-		emit();
+		// 遅延させることでUI value updateを反映させる
+		setTimeout(emit, 1);
 		$("#sing-pad").css("background-color", "lightgray");
 
 	 	// 録画
@@ -104,11 +109,13 @@ $(function () {
 		}
 	}
 	var vibratoOff = function(){
+		console.log("vibratoOff")
 		if (!singEmitTimer) return;
 		clearTimeout(singEmitTimer);
 		singEmitTimer = false;
 		$("#sing-pad").css("background-color", "white");
-
+		$("#sing-frequency").val($("#sing-frequency").attr("min"))
+		$("#sing-strength").val($("#sing-strength").attr("min"))
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
 			youtubeSettings.push({
@@ -119,6 +126,7 @@ $(function () {
 			})
 			updateSettingJSON();
 		}
+	 	updateDotPosition();
 	}
 	
 	$("#sing-vibrato").mousedown(vibratoOn).mouseup(vibratoOff)
@@ -131,15 +139,12 @@ $(function () {
 	})
 
 	var updateParam = function (evt) {
-		if (!singEmitTimer){
-			return
-		}
-		if (+new Date() - lastParamUpdated < 50){
+		if (evt.type == "mousemove" && +new Date() - lastParamUpdated < 50){
 			return
 		}
 		lastParamUpdated = +new Date();
 
-	 	var freq = Math.round(10 + evt.offsetX / $(evt.currentTarget).width() * 6 * 10) / 10
+	 	var freq = Math.round(10 + evt.offsetX / $(evt.currentTarget).width() * 9 * 10) / 10
 	 	var strength = 100 - Math.round(evt.offsetY / $(evt.currentTarget).height() * 100)
 	 	$("#sing-frequency").val(freq * 10)
 	 	$("#sing-frequency-label").text(freq)
@@ -159,19 +164,24 @@ $(function () {
 		}
 	}
 	var padMouseDownFlag = false
-	$("#sing-pad").mousedown(updateParam).mousedown(function () {
+	$("#sing-pad").mousedown(updateParam).mousedown(function (evt) {
 		padMouseDownFlag = true
-		// updateParam(evt);
-	}).mouseup(function () {
+		updateParam(evt);
+		vibratoOn(evt);
+	}).mouseup(function (evt) {
 		padMouseDownFlag = false
+		updateParam(evt);
+		vibratoOff(evt);
 	}).mousemove(function (evt) {
 		if(padMouseDownFlag){
 			updateParam(evt);
 		}
-	}).mouseout(function () {
-		padMouseDownFlag = false;
-		vibratoOff();
-	}).mousedown(vibratoOn).mouseup(vibratoOff);
+	}).mouseout(function (evt) {
+		if(padMouseDownFlag){
+			padMouseDownFlag = false;
+			vibratoOff();
+		}
+	})
 
 	/*
 	 * +++++++++++++++++++++++++++++
@@ -278,6 +288,10 @@ $(function () {
 		$("#youtube-play").attr("disabled", false)
 		youtubeSettingsSeekIndex = 0;
 		youtubePlayer.stopVideo()
+		if (loadSettingTimer){
+			clearTimeout(loadSettingTimer)
+		}
+		vibratoOff();
 	});
 
 })
