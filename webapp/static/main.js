@@ -52,60 +52,49 @@ $(function () {
 
 	 /** sing interface */
 	var singEmitTimer;
-	$("#sing-frequency").change(function () {
-		$("#sing-frequency-label").text($("#sing-frequency").val() / 10)
-	});
 	$("#sing-strength").change(function () {
 		$("#sing-strength-label").text($("#sing-strength").val())
 	})
 	function updateDotPosition() {
-		if(singEmitTimer){
-			var freqRaito = ($("#sing-frequency").val() - $("#sing-frequency").attr("min"))/($("#sing-frequency").attr("max") - $("#sing-frequency").attr("min"))
-			var strengthRaito = (targetStrength - $("#sing-strength").attr("min"))/($("#sing-strength").attr("max") - $("#sing-strength").attr("min"))
+		if (targetStrength > 0){
 			$("#sing-pad").css("background-color", "lightgray");
 		}else{
-			var freqRaito = 1
-			var strengthRaito = 0
 			$("#sing-pad").css("background-color", "white");
-		}		
-		$("#sing-pad-dot").css("bottom", strengthRaito * 200 - 8).css("left", freqRaito * 200 - 8)
-	 	$("#sing-frequency-label").text($("#sing-frequency").val()/10)
+		}
 	 	$("#sing-strength-label").text($("#sing-strength").val())
 	}
-	$("#sing-pad-dot").on("dragstart", function() {
-		return false;		
-	}).css("pointer-events", "none")
+
+	(function (interval) {
+		var emit = function () {
+			console.log("emit")
+		 	// 録画
+			if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
+				youtubeSettings.push({
+					timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
+					event: "updateParam",
+					strength: $("#sing-strength").val()
+				})
+				updateSettingJSON();
+			}
+			socket.emit('test', {
+				// add + for numeric value
+				length: interval,
+				strength: +$("#sing-strength").val(),
+				updateInterval: interval,
+				envelopeFunction: $("#sing-envelope").val(),
+			});
+		}
+		setInterval(emit, interval);
+	}(50));
 
 	function vibratoOn(){
 		console.log("vibratoOn")
-		if(singEmitTimer){
-			clearTimeout(singEmitTimer);
-			return
-		}
-		console.log("strength", +$("#sing-strength").val(), "freq", $("#sing-frequency").val()/10)
-
-		var emit = function () {
-			var interval = Math.round(1000 / ($("#sing-frequency").val() / 10))
-			socket.emit('test', {
-				// add + for numeric value
-				length: Math.round(interval),
-				strength: +$("#sing-strength").val(),
-				envelopeFunction: "sin",
-				updateInterval: +$("#sing-update-interval"),
-				envelopeFunction: $("#sing-envelope").val(),
-			});
-			console.log("strength", +$("#sing-strength").val(), "freq", $("#sing-frequency").val()/10)
-			singEmitTimer = setTimeout(emit, interval);
-		}
-		emit();
-
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
 			console.log("record", youtubePlayer.getCurrentTime())
 			youtubeSettings.push({
 				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
 				event: "vibratoOn",
-				frequency: $("#sing-frequency").val(),
 				strength: $("#sing-strength").val()
 			})
 			updateSettingJSON();
@@ -114,10 +103,6 @@ $(function () {
 	}
 	function vibratoOff(){
 		console.log("vibratoOff")
-		if (!singEmitTimer) return;
-		clearTimeout(singEmitTimer);
-		singEmitTimer = false;
-		$("#sing-frequency").val($("#sing-frequency").attr("max"))
 		targetStrength = 0
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
@@ -144,23 +129,9 @@ $(function () {
 			return
 		}
 		lastParamUpdated = +new Date();
-
-	 	var freq = Math.round(10 + evt.offsetX / $(evt.currentTarget).width() * 9 * 10) / 10
-	 	var strength = 100 - Math.round(evt.offsetY / $(evt.currentTarget).height() * 100)
-	 	$("#sing-frequency").val(freq * 10)
+	 	var strength = Math.round(evt.offsetX / $(evt.currentTarget).width() * 100)
 	 	targetStrength = strength
 	 	updateDotPosition();
-
-	 	// 録画
-		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
-			youtubeSettings.push({
-				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
-				event: "updateParam",
-				frequency: $("#sing-frequency").val(),
-				strength: $("#sing-strength").val()
-			})
-			updateSettingJSON();
-		}
 	}
 	var padMouseDownFlag = false
 	$("#sing-pad").mousedown(updateParam).mousedown(function (evt) {
@@ -268,7 +239,6 @@ $(function () {
 					vibratoOff();
 					break;
 				case "updateParam":
-					$("#sing-frequency").val(setting.frequency);
 					$("#sing-strength").val(setting.strength);
 					updateDotPosition();
 					break;

@@ -92,17 +92,10 @@
           <table class="table">
             <tbody>
             <tr>
-              <th>Frequency</th>
-              <td>
-                <input id="sing-frequency" type="range" name="range" min="10" max= "100" value="100" step="1">
-                <span id="sing-frequency-label">10.0</span> Hz
-              </td>
-            </tr>
-            <tr>
               <th>Intensity</th>
               <td>
-                <input id="sing-strength" type="range" name="range" min="0" max="100" value="100">
-                <span id="sing-strength-label">100</span> %
+                <input id="sing-strength" type="range" name="range" min="0" max="100" value="0">
+                <span id="sing-strength-label">0</span> %
               </td>
             </tr>
             <tr>
@@ -129,11 +122,8 @@
             <tr id="sing-drag-pad">
               <th>Drag Pad</th>
               <td>
-                <span style="color: gray; font-size: 80%;">↑Intensity</span><br />
-                <div id="sing-pad" style="width: 200px; height: 200px; border: 1px solid lightgray; display: inline-block; position: relative;">
-                  <img src="dot.png" alt="dot" id="sing-pad-dot" style="position: absolute; bottom: -8px; left: -8px;" />                 
+                <div id="sing-pad" style="width: 300px; height: 50px; border: 1px solid lightgray; display: inline-block; position: relative;">
                 </div>
-                <span style="color: gray; font-size: 80%;">Frequency→</span>
               </td>
             </tr>
 
