@@ -276,6 +276,7 @@ $(function () {
 		youtubePlaying = false;
 		$("#youtube-record").attr("disabled", false)
 		$("#youtube-play").attr("disabled", false)
+		youtubeSettingsSeekIndex = 0;
 		youtubePlayer.stopVideo()
 	});
 
