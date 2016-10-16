@@ -84,7 +84,7 @@ $(function () {
 				length: Math.round(interval),
 				strength: +$("#sing-strength").val(),
 				envelopeFunction: "sin",
-				updateInterval: 20
+				updateInterval: +$("#sing-update-interval")
 				envelopeFunction: $("#sing-envelope").val(),
 			});
 			singEmitTimer = setTimeout(emit, interval);
@@ -162,6 +162,7 @@ $(function () {
 	var padMouseDownFlag = false
 	$("#sing-pad").mousedown(updateParam).mousedown(function () {
 		padMouseDownFlag = true
+		updateParam(evt);
 	}).mouseup(function () {
 		padMouseDownFlag = false
 	}).mousemove(function (evt) {

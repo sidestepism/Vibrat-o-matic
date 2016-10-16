@@ -32,6 +32,7 @@ io.on('connection', function(socket){
 	if (data.updateInterval) updateInterval = data.updateInterval
 
 	if (data.envelopeFunction == 'default') {
+		// default ならば
 		send_command(3, data.strength, data.length)
 	}else{
 		if (!envelopeFunction[data.envelopeFunction]){
