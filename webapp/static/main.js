@@ -83,8 +83,8 @@ $(function () {
 				// add + for numeric value
 				length: Math.round(interval),
 				strength: +$("#sing-strength").val(),
-				updateInterval: +$("#sing-update-interval")
 				envelopeFunction: $("#sing-envelope").val(),
+				updateInterval: +$("#sing-update-interval")
 			});
 			singEmitTimer = setTimeout(emit, interval);
 		}
@@ -161,7 +161,7 @@ $(function () {
 	var padMouseDownFlag = false
 	$("#sing-pad").mousedown(updateParam).mousedown(function () {
 		padMouseDownFlag = true
-		updateParam(evt);
+		// updateParam(evt);
 	}).mouseup(function () {
 		padMouseDownFlag = false
 	}).mousemove(function (evt) {
