@@ -69,7 +69,7 @@ Below these sections you can see *Song switcher*, **Play** and **Record** button
 
 If you open port 3000 on your machine (already opened if your firewall is off), you can access the page from other device. You can control vibrato from your smartphone with opening `http://192.168.0.1/remote.html` (192.168.0.1 should be IP address of your machine).
 
-In other word if you open port 3000 publicly, API of your EMS is accessible from your world. Keep a close eye on security!
+In other word if you open port 3000 publicly, API of your EMS is accessible from world. Keep a close eye on security!
 
 Enjoy your karaoke time!
 
