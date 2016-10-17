@@ -2,7 +2,7 @@
 
 ## Architecture
 
-![](architecture.png)
+![](images/architecture.png)
 
 ## Dependencies
 
@@ -40,7 +40,7 @@ Neck and stomach are recommended place to put electrodes. We recommend start wit
 
 See a diagram below: 
 
-![Where to put electrode](electrode.png)
+![Where to put electrode](images/electrode.png)
 
 ### 2. Test the features
 
@@ -50,15 +50,20 @@ Then set **duration** to 200ms and **max intensity** to 80%, and increase intens
 
 If **Repeat** checkbox is checked, the signal will be sent repeadedly.
 
+![Where to put electrode](images/feature.png)
+
 ### 3. Sing!
 
 On **Vibrat-o-matic!** section you can control signal for singing.
 
-Move **Strength** slider for control strength of vibrato. Instead you can drag mouse pointer on **Drag Pad** to control strength.
+Move **Strength** slider for control strength of vibrato. Instead you can drag mouse pointer on **Drag Pad** to control strength. You can see waveform on **Waveform** section (Note that the waveform is approximated. Frequency is dependent on your EMS setting).
 
 **Force Detection** Button is for Apple devices which has force detecting trackpad (MacBook 2015, MacBook 2016) or 3D Touch (iPhone 6S, 7). The more strongly you pushed this button, the stronger vibrato you can get.
 
 Below these sections you can see *Song switcher*, **Play** and **Record** buttons and Youtube video. Select a song from a switcher (or push **Select Song** to specify YouTube videoId) and push **Play** to sing on it. **Record** can record the parameters while you controlling vibrato and reproduce them on **Play**. Parameters on each song will shown on **Parameters** section on the left. **Clear** button will clear the parameters of the current song, and **Export** will export all parameters into json file.
+
+![Where to put electrode](images/vibrato.png)
+
 
 ### 4. Remote control
 
