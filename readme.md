@@ -1,5 +1,7 @@
 # Vibrat-o-matic
 
+Vibrat-o-matic makes singing fun! This tool stimulate muscles around neck and stomach to generate a clean vibrato easily. You can control, record and replay where to put vibrato and how strong vibrato you sing with.
+
 ## Architecture
 
 ![](images/architecture.png)
