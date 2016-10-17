@@ -200,7 +200,7 @@ $(function () {
 
     function updateSettingJSON(){
     	if(currentVideoId != ""){
-    	$("#youtube-settings").val(JSON.stringify(parameters));
+	    	$("#youtube-settings").val(JSON.stringify(parameters));
     		youtubeSettings[currentVideoId] = parameters;
     	}
     }
@@ -213,8 +213,9 @@ $(function () {
 	    }
 	    if(youtubeSettings.length){
 	    	console.log("invalid settings: erased");
-	    	youtubeSettings = {}
+	    	youtubeSettings = {};
 	    }
+	    console.log("loadSettingsFromLocalStorage", localStorage.youtubeSettings, youtubeSettings)
 	    updateSettingJSON();
     }
     loadSettingsFromLocalStorage();
@@ -374,6 +375,7 @@ $(function () {
 		}
 	})
 	function saveParameters(){
+		console.log(youtubeSettings);
 		if(currentVideoId != ""){
 			youtubeSettings[currentVideoId] = parameters
 		}
@@ -383,6 +385,39 @@ $(function () {
 		saveParameters();		
 	});
 
+	/*
+	 * +++++++++++++++++++++++++++++
+	 * Import / Export Settings
+	 * +++++++++++++++++++++++++++++
+	 */
+	function saveFile(fileName, content) {
+		console.log(fileName);
+		if (window.navigator.msSaveBlob) {
+			window.navigator.msSaveBlob(new Blob([content], { type: "text/plain" }), fileName);
+		} else {
+			var a = document.createElement("a");
+			a.href = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
+			//a.target   = '_blank';
+			a.download = fileName;
+			document.body.appendChild(a) //  FireFox specification
+			a.click();
+			document.body.removeChild(a) //  FireFox specification
+		}
+	}
+	$("#youtube-import-settings").click(function () {
+		var settings = prompt("Paste settings file content:");
+		try{
+			var settings = JSON.parse(settings);
+			youtubeSettings = settings;
+			alert("Successfully Imported!")
+		}catch(e){
+			alert("invalid JSON")
+		}
+
+	});
+	$("#youtube-export-settings").click(function () {
+		saveFile("VibratomaticSettings.json", JSON.stringify(youtubeSettings));
+	});
 	/*
 	 * +++++++++++++++++++++++++++++
 	 * Force Vibrato
