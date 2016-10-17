@@ -5,7 +5,7 @@ var io = require('socket.io')(http);
 var SerialPort = require('serialport');
 
 var defaultSerialPort = "/dev/tty.usbserial-A9O3R1XL"
-var portName = process.argv.length > 2 ? process.argv[3] : defaultSerialPort;
+var portName = process.argv.length > 2 ? process.argv[2] : defaultSerialPort;
 var updateInterval = 30 // [msec]
 var lastEmission = 0;
 
