@@ -2,6 +2,8 @@
 
 Vibrat-o-matic makes singing fun! This tool stimulate muscles around neck and stomach to generate a clean vibrato easily. You can control, record and replay where to put vibrato and how strong vibrato you sing with.
 
+Vibrat-o-matic is built on [openEMSstim](https://github.com/PedroLopes/openEMSstim), open-hardware platform for controling EMS device. This is open source project and we appriciate if you give leave some advices, problems, PR or typo fixes on [Issues](https://github.com/sidestepism/Vibrat-o-matic/issues) page.
+
 ## Architecture
 
 ![](images/architecture.png)
