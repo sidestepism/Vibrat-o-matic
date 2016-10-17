@@ -44,24 +44,29 @@ See a diagram below:
 
 ### 2. Test the features
 
-On `feature test` section you can test if the system works. 
+On **feature test** section you can test if the system works. 
 
-Then set `duration` to 200ms and `max intensity` to 80%, and increase intensity of your EMS device until you can feel vibration of muscles enough for singing.
+Then set **duration** to 200ms and **max intensity** to 80%, and increase intensity of your EMS device until you can feel vibration of muscles enough for singing.
 
-If `Repeat` checkbox is checked, the signal will be sent repeadedly.
+If **Repeat** checkbox is checked, the signal will be sent repeadedly.
 
 ### 3. Sing!
 
-On `Vibrat-o-matic!` section you can control signal for singing.
+On **Vibrat-o-matic!** section you can control signal for singing.
 
-Move *Strength* slider for control strength of vibrato. Instead you can drag mouse pointer on *Drag Pad* to control strength.
+Move **Strength** slider for control strength of vibrato. Instead you can drag mouse pointer on **Drag Pad** to control strength.
 
-*Force Detection* Button is for Apple devices which has force detecting trackpad (MacBook 2015, MacBook 2016) or 3D Touch (iPhone 6S, 7). The more strongly you pushed this button, the stronger vibrato you can get.
+**Force Detection** Button is for Apple devices which has force detecting trackpad (MacBook 2015, MacBook 2016) or 3D Touch (iPhone 6S, 7). The more strongly you pushed this button, the stronger vibrato you can get.
 
-Below these sections you can see *Song switcher*, *Play* and *Record* buttons and Youtube video. Select a song from a switcher (or push *Select Song* to specify YouTube videoId) and push *Play* to sing on it. *Record* can record the parameters while you controlling vibrato and reproduce them on *Play*. Parameters on each song will shown on *Parameters* section on the left. *Clear* button will clear the parameters of the current song, and *Export* will export all parameters into json file.
+Below these sections you can see *Song switcher*, **Play** and **Record** buttons and Youtube video. Select a song from a switcher (or push **Select Song** to specify YouTube videoId) and push **Play** to sing on it. **Record** can record the parameters while you controlling vibrato and reproduce them on **Play**. Parameters on each song will shown on **Parameters** section on the left. **Clear** button will clear the parameters of the current song, and **Export** will export all parameters into json file.
+
+### 4. Remote control
+
+If you open port 3000 on your machine (already opened if your firewall is off), you can access the page from other device. You can control vibrato from your smartphone with opening `http://192.168.0.1/remote.html` (192.168.0.1 should be IP address of your machine).
+
+In other word if you open port 3000 publicly, API of your EMS is accessible from your world. Keep a close eye on security!
 
 Enjoy your karaoke time!
-
 
 ## LICENSE
 
