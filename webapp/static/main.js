@@ -7,112 +7,110 @@ var onPlayerStateChange;
 var youtubeRecording = false;
 var youtubePlaying = false;
 var lastParamUpdated = 0;
+var currentVideoId = ""
 
+// setting
+var youtubeSettings = {};
 // output JSON to textarea
-var youtubeSettings = [];
+var parameters = [];
 // iterator
-var youtubeSettingsSeekIndex = 0;
+var parametersSeekIndex = 0;
 
+var signalArraySize = 200;
+var signalArray = [];
+for(var i = 0; i < signalArraySize; i++){
+	signalArray.push(0)
+}
+var startDate = +new Date();
+var visualizeFrequency = 7.0 //[Hz]
 
 $(function () {
-	 /** test interface */
-	 var testEmitTimer;
-	 $("#test-length").change(function () {
-	 	$("#test-length-label").text($("#test-length").val())
-	 });
-	 $("#test-strength").change(function () {
-	 	$("#test-strength-label").text($("#test-strength").val())
-	 })
-	 $("#test-submit").click(function () {
-	 	console.log("submit")
-	 	var afn = function () {
+	/** test interface */
+	var testEmitTimer;
+	$("#test-length").change(function () {
+		$("#test-length-label").text($("#test-length").val())
+	});
+	$("#test-strength").change(function () {
+		$("#test-strength-label").text($("#test-strength").val())
+	})
+	$("#test-submit").click(function () {
+		console.log("submit")
+		var afn = function () {
 			socket.emit('test', {
-				// add + for numeric value
+			// add + for numeric value
 				length: +$("#test-length").val(),
 				strength: +$("#test-strength").val(),
 				envelopeFunction: $("#test-envelope").val(),
 				updateInterval: +$("#test-update-interval").val()
 			});
 	 	}
-
 		if($("#test-repeat").prop('checked')){
 			if(testEmitTimer) clearInterval(testEmitTimer);
 			testEmitTimer = setInterval(afn, +Math.max($("#test-interval").val(), 50))
-	 	}
-	 	afn();
-	 });
+		}
+		afn();
+	});
 
-	 $("#test-repeat").change(function () {
-	 	if($("#test-repeat").prop('checked')){
-	 		// この状態でsubmitボタンを押すと繰り返し実行される
-	 	}else{
-	 		if(testEmitTimer) clearInterval(testEmitTimer);
-	 	}
-	 })
+	$("#test-repeat").change(function () {
+		if($("#test-repeat").prop('checked')){
+			// この状態でsubmitボタンを押すと繰り返し実行される
+		}else{
+			if(testEmitTimer) clearInterval(testEmitTimer);
+		}
+	})
 
 	 /** sing interface */
 	var singEmitTimer;
-	$("#sing-strength").change(function () {
-		$("#sing-strength-label").text($("#sing-strength").val())
-	})
-	function updateDotPosition() {
-		if (targetStrength > 0){
-			$("#sing-pad").css("background-color", "lightgray");
-		}else{
-			$("#sing-pad").css("background-color", "white");
-		}
-	 	$("#sing-strength-label").text($("#sing-strength").val())
-	}
+	var lastRecordedStrength = 0;
 
 	(function (interval) {
 		var emit = function () {
-			console.log("emit")
 		 	// 録画
-			if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
-				youtubeSettings.push({
+			if (youtubeRecording && youtubePlayer.getPlayerState() == 1 && lastRecordedStrength != currentStrength){
+				parameters.push({
 					timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
 					event: "updateParam",
-					strength: $("#sing-strength").val()
+					strength: Math.round(currentStrength)
 				})
 				updateSettingJSON();
+				lastRecordedStrength = currentStrength;
 			}
-			socket.emit('test', {
-				// add + for numeric value
-				length: interval,
-				strength: +$("#sing-strength").val(),
-				updateInterval: interval,
-				envelopeFunction: $("#sing-envelope").val(),
-			});
+			if (currentStrength > 0.5){
+				socket.emit('test', {
+					// add + for numeric value
+					length: interval*2,
+					strength: +Math.round(currentStrength),
+					updateInterval: interval,
+					envelopeFunction: "default",
+				});
+			}
 		}
 		setInterval(emit, interval);
-	}(50));
+	}(100));
 
 	function vibratoOn(){
 		console.log("vibratoOn")
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
-			console.log("record", youtubePlayer.getCurrentTime())
-			youtubeSettings.push({
+			parameters.push({
 				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
 				event: "vibratoOn",
-				strength: $("#sing-strength").val()
+				strength: currentStrength
 			})
 			updateSettingJSON();
 		}
-	 	updateDotPosition();
 	}
 	function vibratoOff(){
 		console.log("vibratoOff")
-		targetStrength = 0
 	 	// 録画
 		if (youtubeRecording && youtubePlayer.getPlayerState() == 1){
-			youtubeSettings.push({
+			parameters.push({
 				timeStamp: Math.floor(youtubePlayer.getCurrentTime()*1000)/1000,
 				event: "vibratoOff"
 			})
 			updateSettingJSON();
 		}
-	 	updateDotPosition();
+		targetStrength = 0;
 	}
 	
 	$("#sing-vibrato").mousedown(vibratoOn).mouseup(vibratoOff)
@@ -131,9 +129,17 @@ $(function () {
 		lastParamUpdated = +new Date();
 	 	var strength = Math.round(evt.offsetX / $(evt.currentTarget).width() * 100)
 	 	targetStrength = strength
-	 	updateDotPosition();
 	}
 	var padMouseDownFlag = false
+	
+	$("#sing-target-strength").change(function () {
+		targetStrength = $(this).val()
+		$("#sing-target-strength-label").text(targetStrength)
+	}).mousemove(function () {
+		targetStrength = $(this).val()
+		$("#sing-target-strength-label").text(targetStrength)
+	});
+
 	$("#sing-pad").mousedown(updateParam).mousedown(function (evt) {
 		padMouseDownFlag = true
 		updateParam(evt);
@@ -158,11 +164,10 @@ $(function () {
 	 * Youtube song interface
 	 * +++++++++++++++++++++++++++++
 	 */
-    var loadSettingTimer = null;
     var playStartTimestamp = 0
     onYouTubeIframeAPIReady = function() {
     	youtubePlayer = new YT.Player('youtube-player', {
-          videoId: 'vNhhAEupU4g',
+          videoId: '',
           events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
@@ -175,13 +180,15 @@ $(function () {
     }
 	onPlayerStateChange = function() {
 		if (youtubePlayer.getPlayerState() == 1){
-			youtubeSettingsSeekIndex = 0
+			parametersSeekIndex = 0
 			$("#youtube-record").attr("disabled", true);
 			$("#youtube-play").attr("disabled", true);
 		} else {
+			parametersSeekIndex = 0
 			$("#youtube-record").attr("disabled", false);
 			$("#youtube-play").attr("disabled", false);			
 		}
+		saveParameters();
 	};
     console.log("Youtube iframe API Loading");
     var tag = document.createElement('script');
@@ -192,7 +199,10 @@ $(function () {
 
 
     function updateSettingJSON(){
-    	$("#youtube-settings").val(JSON.stringify(youtubeSettings))
+    	if(currentVideoId != ""){
+    	$("#youtube-settings").val(JSON.stringify(parameters));
+    		youtubeSettings[currentVideoId] = parameters;
+    	}
     }
     /*
      localStorageから設定を読み込み
@@ -201,20 +211,74 @@ $(function () {
 	    if(window.localStorage && window.localStorage.youtubeSettings){
 	    	youtubeSettings = JSON.parse(window.localStorage.youtubeSettings);
 	    }
-	    if(!youtubeSettings.length) youtubeSettings = [];
+	    if(youtubeSettings.length){
+	    	console.log("invalid settings: erased");
+	    	youtubeSettings = {}
+	    }
 	    updateSettingJSON();
     }
     loadSettingsFromLocalStorage();
 
 	function UIUpdate(){
 		// called every 50ms
-		if (targetStrength !== null){
-			var strength = +$("#sing-strength").val();
-			strength += (targetStrength - strength) * 0.2
-			$("#sing-strength").val(Math.round(strength))
+		// var diff = 0
+		// if(targetStrength > currentStrength){
+		// 	if(currentStrength < 50){
+		// 		diff = Math.min(15, targetStrength - currentStrength)
+		// 	} else {
+		// 		diff = Math.min(3, targetStrength - currentStrength)
+		// 	}
+		// }else if(targetStrength < currentStrength){ 
+			// if(currentStrength > 50){
+			// 	diff = -Math.min(3, currentStrength - targetStrength)
+			// } else {
+			// 	diff = -Math.min(15, currentStrength - targetStrength)
+			// }
+		// }
+		var diff = targetStrength > currentStrength ? (targetStrength - currentStrength) / 2 : (targetStrength - currentStrength) / 4;
+		currentStrength += Math.floor(diff);
+		// $("#sing-strength").val(Math.round(currentStrength));
+		$("#sing-strength-bar").css("width", Math.round(currentStrength) + "%");
+	 	$("#sing-strength-label").text(Math.round(currentStrength));
+	 	if(currentStrength < 70){
+		 	$("#sing-strength-bar").removeClass("progress-bar-warning")
+		 	$("#sing-strength-bar").removeClass("progress-bar-danger")
+	 	}else if(currentStrength < 90){
+		 	$("#sing-strength-bar").addClass("progress-bar-warning")
+		 	$("#sing-strength-bar").removeClass("progress-bar-danger")
+	 	}else{
+		 	$("#sing-strength-bar").removeClass("progress-bar-warning")
+		 	$("#sing-strength-bar").addClass("progress-bar-danger")
+	 	}
+		loadCurrentParameter();
+	}
+	// draw a plot of signal
+	var canvas = document.getElementById('waveform-canvas');
+	var context = canvas.getContext('2d');
+	var width = canvas.width;
+	var height = canvas.height;
+	context.lineWidth = 6
+	setInterval(function () {
+		signalArray.pop();
+		signalArray.unshift(Math.sin(Math.PI*2*(+new Date()-startDate)/200)*currentStrength/200);
+	}, 10);
+	setInterval(function() {
+		context.clearRect(0, 0, width, height);
+		context.strokeStyle = "#98AFC7"
+		context.beginPath();     // パスを開始
+		context.moveTo(0, signalArray[0]*height/2+height/2); // ペンを紙に付けずに移動
+		for(var i = 0; i < signalArraySize; i++){
+			context.lineTo(i/(signalArraySize-1)*width, signalArray[i]*height/2+height/2); // ペンを紙に付けて移動
 		}
-		updateDotPosition();
+		context.stroke();        // パスに沿ってインクを流し込む（デフォルトでは1ピクセル幅）		
+	}, 50)
 
+	function loadCurrentParameter(){
+		if (targetStrength > 0){
+			$("#sing-pad").css("background-color", "lightgray");
+		}else{
+			$("#sing-pad").css("background-color", "white");
+		}
 		// update parameter if playing
 		var setting;
 		if (!youtubePlaying){
@@ -225,7 +289,7 @@ $(function () {
 			// console.log("loadCurrentParameter: youtubePlayer.getPlayerState() is not playing state");
 			return
 		}
-		if(setting = youtubeSettings[youtubeSettingsSeekIndex]){
+		if(setting = parameters[parametersSeekIndex]){
 			if (setting.timeStamp > youtubePlayer.getCurrentTime()){
 				// do nothing
 				// console.log("loadCurrentParameter: no op");
@@ -239,61 +303,84 @@ $(function () {
 					vibratoOff();
 					break;
 				case "updateParam":
-					$("#sing-strength").val(setting.strength);
-					updateDotPosition();
+					targetStrength = setting.strength
+					currentStrength = setting.strength
 					break;
 				default:
 					break;
 			}
-			// console.log("loadCurrentParameter:", youtubeSettingsSeekIndex);
-			youtubeSettingsSeekIndex ++;
+			// console.log("loadCurrentParameter:", parametersSeekIndex);
+			parametersSeekIndex ++;
 			loadCurrentParameter();
 		}else{
-			// console.log("loadCurrentParameter: Seekindex out of range", youtubeSettingsSeekIndex)
+			// console.log("loadCurrentParameter: Seekindex out of range", parametersSeekIndex)
 		}
 	}
-	var loadParameterTimer = setInterval(UIUpdate, 50);
+	var loadParameterTimer = setInterval(UIUpdate, 70);
 
 	$("#youtube-switch").children().each(function(e){
+		console.log("each")
 		$(this).click(function() {
-			youtubePlayer.cueVideoById($(this).attr("x-youtube-id"), $(this).attr("x-youtube-playAt"))
-			playStartTimestamp = +$(this).attr("x-youtube-playAt")
+			saveParameters();
+			currentVideoId = $(this).attr("x-youtube-id");
+			youtubePlayer.cueVideoById(currentVideoId, $(this).attr("x-youtube-playAt"));
+			playStartTimestamp = +$(this).attr("x-youtube-playAt");
+			if(youtubeSettings[currentVideoId]){
+				parameters = youtubeSettings[currentVideoId];				
+			}else{
+				parameters = [];
+			}
+			updateSettingJSON();
 		})
 	});
+	$("#youtube-new-song").click(function () {
+		currentVideoId = prompt("input videoId");
+		youtubePlayer.cueVideoById(currentVideoId);
+		parameters = youtubeSettings[currentVideoId];
+	})
 	$("#youtube-record").click(function() {
-		youtubeSettingsSeekIndex = 0;
-		youtubeRecording = true;
-		youtubePlaying = false;
 		youtubePlayer.playVideo();
 		youtubePlayer.seekTo(playStartTimestamp, true);
+		youtubeRecording = true;
+		youtubePlaying = false;
+		lastRecordedStrength = 0;
 	});
 	$("#youtube-play").click(function() {
-		try{
-			youtubeSettings = JSON.parse($("#youtube-settings").val());
-		}catch(e){
-			youtubeSettings = []
-			alert("JSON parse failed")
-		}
-		youtubeRecording = false;
+		youtubeRecording = false;		
 		youtubePlaying = true;
-		youtubeSettingsSeekIndex = 0;
+		youtubePlayer.playVideo();
 		youtubePlayer.seekTo(playStartTimestamp, true);
-		if (loadSettingTimer){
-			clearTimeout(loadSettingTimer)
-		}
 	});
 	$("#youtube-stop").click(function() {
 		youtubeRecording = false;		
 		youtubePlaying = false;
-		youtubeSettingsSeekIndex = 0;
+		parametersSeekIndex = 0;
 		youtubePlayer.stopVideo()
-		if (loadSettingTimer){
-			clearTimeout(loadSettingTimer)
-		}
 		vibratoOff();
 	});
-	$(window).bind('beforeunload', function(event) {
+	$("#youtube-clear-settings").click(function(){
+		if(confirm("Clear All Settings")){
+			parameters = [];
+			$("#youtube-settings").val("[]")
+			localStorage.parameters = []
+		}
+	});
+	$("#youtube-settings").change(function () {
+		try{
+			parameters = JSON.parse($("#youtube-settings").val());
+		}catch(e){
+			parameters = []
+			alert("JSON parse failed")
+		}
+	})
+	function saveParameters(){
+		if(currentVideoId != ""){
+			youtubeSettings[currentVideoId] = parameters
+		}
 		localStorage.youtubeSettings = JSON.stringify(youtubeSettings);
+	}
+	$(window).bind('beforeunload', function(event) {
+		saveParameters();		
 	});
 
 	/*
@@ -302,7 +389,8 @@ $(function () {
 	 * +++++++++++++++++++++++++++++
 	 */
 
-	var targetStrength = null
+	var targetStrength = 0
+	var currentStrength = 0
 	$('#sing-vibrato-force-button').pressure({
 	  start: function(event){
 	  	vibratoOn();

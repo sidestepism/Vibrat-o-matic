@@ -7,6 +7,7 @@ var SerialPort = require('serialport');
 var defaultSerialPort = "/dev/tty.usbserial-A9O3R1XL"
 var portName = process.argv.length > 2 ? process.argv[3] : defaultSerialPort;
 var updateInterval = 30 // [msec]
+var lastEmission = 0;
 
 // ensure f(0) = f(1) = 0
 var envelopeFunction = {
@@ -26,6 +27,7 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
 	console.log('a user connected');
 	var updateIntervalTimer;
+	var channelNo = 3;
 
 	socket.on('test', function (data) {
 	var startDate = +(new Date())
@@ -33,7 +35,7 @@ io.on('connection', function(socket){
 
 	if (data.envelopeFunction == 'default') {
 		// default ならば
-		send_command(3, data.strength, data.length)
+		send_command(channelNo, data.strength, data.length)
 	}else{
 		if (!envelopeFunction[data.envelopeFunction]){
 			console.log("no such envelope function:", data.envelopeFunction)
@@ -50,7 +52,7 @@ io.on('connection', function(socket){
 				return
 			}
 			var intensity = Math.round(envelopeFunction[data.envelopeFunction](elapsedRatio) * data.strength)
-			send_command(3, intensity, updateInterval)
+			send_command(channelNo, intensity, updateInterval)
 		}, updateInterval)
 	}
   });
@@ -72,25 +74,33 @@ openEMSstim.on('close', showPortClose);
 openEMSstim.on('error', showError);
 
 function showPortOpen() {
-	   // console.log('openEMSstim connected to serial port at data rate: ' + openEMSstim.options.baudRate);
+	   console.log('openEMSstim connected to serial port at data rate: ' + openEMSstim.options.baudRate);
 }
  
 function sendSerialData(data) {
-	   // console.log(data);
+	   console.log(data);
 }
  
 function showPortClose() {
-	   // console.log('openEMSstim connection to serial port closed.');
+	   console.log('openEMSstim connection to serial port closed.');
 }
  
 function showError(error) {
-	   // console.log('Serial port error: ' + error);
+	   console.log('Serial port error: ' + error);
 }
 
 //First validates a command, then if valid, sends it to the openEMSstim
 function send_command(channel, intensity, duration) {
+	if (!openEMSstim.isOpen()){
+		console.log("openEMSstim: port is not open")
+	}
+	if (+new Date() - lastEmission < 80) {
+		console.log("openEMSstim: emission rate is to high")
+		return;
+	}
+	lastEmission = +new Date();
 	var command = ""
-	console.log("||||||||||||||||||||||||||||||".substring(0, Math.round(intensity / 3)))
+	console.log("||||||||||||||||||||||||||||||".substring(0, Math.round(intensity / 3)), +new Date())
 	if (is_numeric(channel) && is_numeric(intensity) && is_numeric(duration)) {
 		if (channel == 1 || channel == 2 || channel == 3) {
 			command = "C" + (channel -1);
