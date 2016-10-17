@@ -18,6 +18,9 @@
 
 - Vibrat-o-matic works with [openEMSstim](https://github.com/PedroLopes/openEMSstim), open-hardware module to adjust the intensity of EMS/TENS stimulators. Read its instruction to use EMS/TENS safely.
 
+- We modified arudino program on openEMSstim slightly: ours accepts **Channel 2** to both activate Channel 0 and 1 on one command, and baud rate is set to 57600 (for performance reasons). Please use the arduino firmware on [our fork](https://github.com/sidestepism/openEMSstim) instead of the original one.
+
+
 ### 0. Install npm dependencies
 
     cd webapp
