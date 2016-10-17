@@ -20,15 +20,15 @@
 
 ### 0. Install npm dependencies
 
- cd webapp
- npm install
+    cd webapp
+    npm install
 
 ### 1. Launch HTTP server
 
 Before testing, please make sure *frequency of EMS is set to 5-8 Hz and intensity to minimum.*
 
- cd webapp
- node index.js [Path to serial port]
+    cd webapp
+    node index.js [Path to serial port]
 
 Default `[Path to serial port]` is set to `/dev/tty.usbserial-A9O3R1XL`. You can know your path by running `ls /dev/tty.usbserial*` on bash when openEMSstim is connected to your machine via USB.
 
