@@ -38,13 +38,13 @@
     }
 
   </style>
-  <title>🎤Vibratomatic</title>
+  <title>🎤Vibrat-o-matic</title>
   </head>
   <body>
     <div class="container">
       <div class="page-header">
-        <h1>Vibratomatic</h1>
-        <p class="lead">Console</p>
+        <h1>Vibrat-o-matic!</h1>
+        <!-- <p class="lead">Console</p> -->
       </div>
 
       <!-- Simple Test Section -->
@@ -57,7 +57,7 @@
       </div>
  -->
       <!-- Simple Test Section -->
-      <h3>Feature Test</h3>
+      <!-- <h3>Feature Test</h3>
 
       <div class="row">
         <div class="col-md-12">
@@ -98,9 +98,9 @@
             <input type="checkbox" id="test-repeat"> Repeat (Interval <input type="text" name="interval" id="test-interval" value="2000" size="6"> ms)
           </p>
         </div>
-      </div>
+      </div> -->
 
-      <h3>Vibrat-o-matic!</h3>
+      <!-- <h3>Vibrat-o-matic!</h3> -->
 
       <div class="row" onselectstart="return false;">
         <div class="col-md-12">
@@ -176,24 +176,26 @@
 
       <div class="row">
         <div class="col-md-7">
+          <div id="youtube-player" style="width: 600px; height: 400px; border: 1px solid lightgray; display: inline-block;"></div>
           <div id="songSwitcher" style="margin: 10px 0;">
-            <div class="btn-group" role="group" id="youtube-switch">
+          <p>
+              <div class="btn-group" role="group" id="youtube-switch">
               <button type="button" class="btn btn-default" x-youtube-id="L0MK7qz13bU" x-youtube-playAt="56">Let it go</button>
               <button type="button" class="btn btn-default" x-youtube-id="dmHcDWrMH-8" x-youtube-playAt="43">Les mis</button>
                <!-- <button type="button" class="btn btn-default" x-youtube-id="dmHcDWrMH-8" x-youtube-playAt="55">Les mis</button> -->
-              <button type="button" class="btn btn-default" x-youtube-id="RxPZh4AnWyk" x-youtube-playAt="66">Susan</button>
+              <button type="button" class="btn btn-default" x-youtube-id="RxPZh4AnWyk" x-youtube-playAt="66">Les mis (Susan)</button>
               <button type="button" class="btn btn-default" x-youtube-id="yqzCwcL9xDc" x-youtube-playAt="0">千の風</button>
               <button type="button" class="btn btn-default" x-youtube-id="vNhhAEupU4g" x-youtube-playAt="44">I was born</button>              
             </div>
             <span id="youtube-new-song" class="btn btn-default">Select video</span>
-            <br />
+          </p>
+          <p>
             <span id="youtube-record" class="btn btn-danger"><span class="glyphicon glyphicon-record"></span> Record</span>
             <span id="youtube-play" class="btn btn-primary"><span class="glyphicon glyphicon-play"></span> Play</span>
-            <span id="youtube-stop" class="btn btn-default"><span class="glyphicon glyphicon-stop"></span> Stop</span>
-            <br />
-
+            <span id="youtube-stop" class="btn btn-default"><span class="glyphicon glyphicon-stop"></span> Stop</span>            
+          </p>
           </div>
-          <div id="youtube-player" style="width: 600px; height: 400px; border: 1px solid lightgray; display: inline-block;"></div>
+
         </div>
 
         <div class="col-md-5">

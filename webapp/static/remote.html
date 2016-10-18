@@ -38,7 +38,7 @@
     <script src="/bower_components/pressure/dist/pressure.min.js" type="text/javascript"></script>
     <script src="/bower_components/pressure/dist/jquery.pressure.min.js" type="text/javascript"></script>
     <script type="text/javascript">
-    var socket = io('192.168.1.32:3000');
+    var socket = io();
     $(function () {
       var pageHeight = $("body").height()
       var strength = 0;
@@ -67,15 +67,11 @@
         $("body").css("background-color", color);
       }
       $("html").on("touchstart", vibratoOn).on("touchmove", vibratoOn).on("touchend", vibratoOff);
+      var prevStrength = 0;
       setInterval(function () {
-        if(strength > 0){
-          socket.emit('test', {
-            // add + for numeric value
-            length: 150,
-            strength: +Math.round(strength),
-            updateInterval: 150,
-            envelopeFunction: "default",
-          });          
+        if (prevStrength != strength){
+          socket.emit('remoteUI', {strength: strength})
+          prevStrength = strength
         }
       }, 100)
     })

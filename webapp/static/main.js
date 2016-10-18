@@ -27,6 +27,12 @@ var visualizeFrequency = 7.0 //[Hz]
 $(function () {
 	/** test interface */
 	var testEmitTimer;
+	socket.on('remoteUI', function (data) {
+		console.log('remoteUI', data);
+		$("sing-strength").val(data.strength);
+		targetStrength = data.strength;
+		$("#sing-target-strength-label").text(data.strength);
+	})
 	$("#test-length").change(function () {
 		$("#test-length-label").text($("#test-length").val())
 	});

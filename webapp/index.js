@@ -29,6 +29,11 @@ io.on('connection', function(socket){
 	var updateIntervalTimer;
 	var channelNo = 3;
 
+	socket.on('remoteUI', function (data) {	
+		console.log('remoteUI', data);
+		socket.broadcast.emit('remoteUI', data);
+	});
+
 	socket.on('test', function (data) {
 	var startDate = +(new Date())
 	if (data.updateInterval) updateInterval = data.updateInterval
@@ -55,6 +60,7 @@ io.on('connection', function(socket){
 			send_command(channelNo, intensity, updateInterval)
 		}, updateInterval)
 	}
+
   });
 });
 
