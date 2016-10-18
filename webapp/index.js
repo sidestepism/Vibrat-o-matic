@@ -10,17 +10,16 @@ var portName = process.argv.length > 2 ? process.argv[2] : defaultSerialPort;
 var updateInterval = 30 // [msec]
 var lastEmission = 0;
 
-
 var oscServer = new osc.Server(3001, '0.0.0.0');
 console.log("listening OSC on *:3001");
 oscServer.on("message", function (msg, rinfo) {
       console.log("OSC message:", msg);
       if(msg[0][1] == 'on'){
       	console.log("OSC vibrato On")
-		socket.broadcast.emit('remoteUI', {strength: 80});      	
+		io.sockets.emit('remoteUI', {strength: 80});      	
       }else{
       	console.log("OSC vibrato Off")
-		socket.broadcast.emit('remoteUI', {strength: 0}); 	
+		io.sockets.emit('remoteUI', {strength: 0}); 	
       }
 });
 
